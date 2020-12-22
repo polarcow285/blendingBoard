@@ -1,23 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/*class Position{
-   List<String> pos = new List();
-   var positionsMap = new Map();
-   
-    
-    Position(List<String> positionKey){
-      positionsMap["beginning"] = "beginning";
-      positionsMap["middle"] = "middle";
-      positionsMap["end"] = "end";
-      positionsMap["sides"] = "sides";
-      positionsMap["all"] = "all";
-      
-      for (int i=0; i<positionKey.length;i++)
-        pos.add(positionsMap[i]);
-      }
+List<String> dataStringList = [];
+List <List> allData = [];
+int numberOfLetterPacks;
 
-}*/
 class LetterSet{
   String name;
   List <String> position;
@@ -32,9 +20,19 @@ class LetterSet{
     if (positionList[0] == "all"){
       position = ["beginning", "middle", "end"];
     }
+    if (positionList[0] == "latterHalf"){
+      position = ["middle", "end"];
+    }
     letters = letterList;
   }
   
+  void dataEncode(List<String> stringList){
+    stringList.add("#" + name);
+    stringList.add(position[0]);
+    for(int i=0; i<letters.length; i++){
+      stringList.add(letters[i]);
+    }
+  }
   void letterSetInfo(){
     print (name);
     print (position);
@@ -60,6 +58,13 @@ class LetterPack{
     sets = [beginning, middle, end];
     
   }
+  void dataEncode(List<String> stringList){
+    stringList.add(name);
+    beginning.dataEncode(stringList);
+    middle.dataEncode(stringList);
+    end.dataEncode(stringList);
+  }
+  
   void letterPackInfo(){
     print (name);
     print (beginning.name);
@@ -70,12 +75,83 @@ class LetterPack{
     print (end.letters);
   }
   
+  static void encodeAll(){
+    for (int i=0; i<allPacks.length; i++){
+      List <String> temp = [];
+      allPacks[i].dataEncode(temp);
+      //add stuff from temp into dataStringList
+      allData.add(temp);
+    }
+  }
+  static LetterPack decodeLetterPack(List <String> letterSetList){
+    LetterPack tempLP;
+    String letterPackName = "";
+    LetterSet tempLS1;
+    LetterSet tempLS2;
+    LetterSet tempLS3;
+    int index1;
+    int index2;
+    int index3;
+    String letterSetName1 = "";
+    String letterSetName2 = "";
+    String letterSetName3 = "";
+    List<String> position1 = [];
+    List<String> position2 = [];
+    List<String> position3 = [];
+    List<String> lettersList1 = [];
+    List<String> lettersList2 = [];
+    List<String> lettersList3 = [];
+    int count = 0;
+    
+    for(int i =0; i<letterSetList.length; i++){
+       if(letterSetList[i][0] == "#"){
+         count++;
+         if(count == 1){
+           index1 = i;
+           letterSetName1 = letterSetList[i].substring(1,letterSetList[i].length);
+           position1.add(letterSetList[i+1]);
+         }
+         if(count == 2){
+           index2 = i;
+           letterSetName2 = letterSetList[i].substring(1,letterSetList[i].length);
+           position2.add(letterSetList[i+1]);
+         }
+         if(count == 3){
+           index3 = i;
+           letterSetName3 = letterSetList[i].substring(1,letterSetList[i].length);
+           position3.add(letterSetList[i+1]);
+         }
+       }
+    }
+    letterPackName = letterSetList[0];
+    lettersList1 = letterSetList.sublist(index1+2, index2);
+    lettersList2 = letterSetList.sublist(index2+2, index3);
+    lettersList3 = letterSetList.sublist(index3+2);
+    
+    tempLS1 = new LetterSet(letterSetName1, position1, lettersList1);
+    tempLS2 = new LetterSet(letterSetName2, position2, lettersList2);
+    tempLS3 = new LetterSet(letterSetName3, position3, lettersList3);
+    tempLP = new LetterPack(letterPackName, tempLS1, tempLS2, tempLS3);
+    return tempLP;
+
+  }
+  //decodeAll will take allData and update allPacks.
+  static void decodeAll(){
+    //allPacks is a list of letterpacks
+    allPacks.clear();
+    //allData is a list of stringLists
+    //decodeLetterPack converts stringList into a letterPack
+    for (int i=0; i<allData.length; i++){
+      allPacks.add(decodeLetterPack(allData[i]));
+    }
+  }
+  
 }
-LetterSet singleConsonantsBeginning = new LetterSet("Single Consonants", ["beginning"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p ", "qu", "r", "s", "t", "v", "w", "x", "y", "z"]);  
-LetterSet singleConsonantsEnding = new LetterSet("Single Consonants",["end"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p ", "r", "s", "t", "v", "w", "x", "y", "z"]);
+LetterSet singleConsonantsBeginning = new LetterSet("Single Consonants", ["beginning"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "qu", "r", "s", "t", "v", "w", "x", "y", "z"]);  
+LetterSet singleConsonantsEnding = new LetterSet("Single Consonants",["end"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "y", "z"]);
 LetterSet hBrothers = LetterSet("H Brothers", ["sides"], ["ch", "ph", "sh", "th", "wh"]);
 LetterSet beginningBlends = LetterSet("Beginning Blends", ["beginning"], ["bl", "br", "cl", "cr", "dr", "fl", "fr", "gl", "gr", "pl", "pr", "sc", "scr", "shr", "sk", "sl", "sm", "sn", "sp", "spl", "spr", "squ", "st", "str", "sw", "thr", "tr", "tw"]);
-LetterSet shortVowelPointers = LetterSet("Short Vowel Pointers", ["middle", "end"], ["ck", "dge", "tch", "ff", "ll", "ss", "zz"]);
+LetterSet shortVowelPointers = LetterSet("Short Vowel Pointers", ["latterHalf"], ["ck", "dge", "tch", "ff", "ll", "ss", "zz"]);
 LetterSet endingBlends = LetterSet("Ending Blends", ["end"], ["sk", "sp", "st", "ct", "ft", "lk", "lt", "mp", "nch", "nd", "nt", "pt"]);
 LetterSet magicEEnding = LetterSet("Magic E", ["end"], ["be", "ce", "de", "fe", "ge", "ke", "le", "me", "ne", "pe", "se", "te"]);
 LetterSet closedSyllable = LetterSet("Closed Syllable", ["middle"], ["a", "e", "i", "o", "u"]);
@@ -146,12 +222,12 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  
   @override
   void initState(){
     super.initState();
@@ -159,29 +235,101 @@ class _MyHomePageState extends State<MyHomePage> {
         DeviceOrientation.landscapeRight,
         DeviceOrientation.landscapeLeft,
     ]);
+    readAll();
   }
+
+  Future<List> _read(String keyNumberString, List<String> listAddress) async {
+    //allPacks.add(LetterPack("askdhf", LetterSet("hi",  ["beginning"], ["hi"]), LetterSet("x", ["middle"], ["X"]), LetterSet("yz", ["beginning"], ["YZ"])));
+    final prefs = await SharedPreferences.getInstance();
+    final key = keyNumberString;
+    final value = prefs.getStringList(key) ?? [];
+    listAddress = value;
+    //print('read: $value');
+    return value;
+  }
+
+  Future <int>_readInt(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //Return int
+    int intValue = prefs.getInt(key);
+    return intValue;
+  }
+
+  void readAll() async {
+        await _readInt("numberOfKeys").then((value) {
+              numberOfLetterPacks = value;
+        });
+        print(numberOfLetterPacks);
+        if (numberOfLetterPacks == null){
+          setState(() { 
+            numberOfLetterPacks = 3;
+          });        
+          print("First time. Default packs will be set");
+        }
+        else{
+          numberOfLetterPacks = numberOfLetterPacks;
+          allPacks.clear();
+          
+          for(int i = 0; i<numberOfLetterPacks; i++){
+            List<String> tempStringList;
+            await _read("$i",tempStringList).then((value) {
+              LetterPack tempPack = LetterPack.decodeLetterPack(value);
+              allPacks.add(tempPack);
+              letterPackMap[value[0]] = tempPack;
+            });
+            
+          }
+          print("Read and decoded all packs");
+        }
+        print(numberOfLetterPacks);
+        /*for (LetterPack p in allPacks){
+          p.letterPackInfo();
+        }*/
+      }
+      Future <String>_readLetterPackName(String key) async {
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            //Return int
+            String stringValue = prefs.getString(key);
+            return stringValue;
+      }
+  
+  _reset() async{
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      await preferences.clear(); 
+     // allPacks.clear();  
+        print("CLEARED ALL");
+     }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            buttonRow(),
-          
-          ],
-        ),
-      ),
+      body: Stack(
+        children: <Widget>[
+          Align(
+            child: miscButtonRow(),
+            alignment: Alignment.bottomCenter,
+          ),
+          Align(
+            child: mainButtonRow(),
+            alignment: Alignment.center,
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                _reset();
+              },
+              child: Icon(Icons.restore),
+              backgroundColor: Colors.blueAccent,
+              mini: true,
+            ),
+          )
+        ],
+      )
 
     );
   }
-  Widget buttonRow(){
+  Widget mainButtonRow(){
     return Container(
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -189,6 +337,17 @@ class _MyHomePageState extends State<MyHomePage> {
           createDeckButton(),
           logoButton(),
           myDecksButton(),
+        ],
+    )
+   );
+  }
+  Widget miscButtonRow(){
+    return Container(
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          missionStatementButton(),
+          settingsButton(),
         ],
     )
    );
@@ -221,12 +380,20 @@ class _MyHomePageState extends State<MyHomePage> {
         textColor: Colors.black,
         shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-            /*Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BoardScreen()),
-                  );
-                  */
+        onPressed: () async{
+          //read
+          await _readLetterPackName("currentLetterPackName").then((value) {
+              if (value == null){
+                print("First time, letterPackName = null");
+                value = "Standard (Closed Syllable)";
+              }
+              letterPackName = value;
+              print(letterPackName);
+          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BoardScreen()),
+          );
           },
       ),
     );
@@ -250,8 +417,79 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+  Widget missionStatementButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: IconButton(
+        icon: Icon(Icons.pie_chart),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MissionStatementScreen()),
+          );
+        },
+      ),
+    );
+  }
+  Widget settingsButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: IconButton(
+        icon: Icon(Icons.settings),
+        onPressed: () {
+          
+        },
+      ),
+    );
+  }
+  Widget qrButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: IconButton(
+        icon: Icon(Icons.camera),
+        onPressed: () {
+          //go to QR camera
+        },
+      ),
+    );
+  }
 }
-
+class MissionStatementScreen extends StatefulWidget {
+  @override
+  _MissionStatementScreenState createState() => _MissionStatementScreenState();
+}
+class _MissionStatementScreenState extends State<MissionStatementScreen>{
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text("IMAGE"),
+            //add hyperlink
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text("MISSION STATEMENT"),
+          ),
+          Positioned(
+            top: 20,
+            left: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Icon(Icons.cancel),
+              backgroundColor: Colors.blueAccent,
+              mini: true,
+            ),
+          )
+        ],
+      )
+      
+    );
+  }
+}
 class CreateDecksScreen extends StatefulWidget {
   @override
   _CreateDecksScreenState createState() => _CreateDecksScreenState();
@@ -291,57 +529,33 @@ class _CreateDecksScreenState extends State<CreateDecksScreen>{
    }
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        //title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            //beginningChoiceChips(),
-            beginningChoiceChips(),
-            middleChoiceChips(),
-            endChoiceChips(),
-            checkmarkButton(),
-            /*Expanded(
-            child: ListView(children: choiceChipList), 
+      body: Stack(
+        children: <Widget>[
+          Align(
+            alignment: Alignment.center,
+            child: choiceChipRow(),
           ),
-          */
-          
-          ],
-        ),
-      ),
-
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()),
+                );
+              },
+              child: Icon(Icons.home),
+              backgroundColor: Colors.blueAccent,
+              mini: true,
+            ),
+          )
+        ],
+      )
+      
     );
   }
   
-  /*void choiceChipMaker(String s, int index){
-  
-    //for (int i=0; i<allSets.length; i++);
-      //choiceChipList.add(new Widget());
-      choiceChipList = List.from(choiceChipList)
-          ..add(ChoiceChip(
-          label: Text(s),
-            selected: _value == index,
-            onSelected: (isSelected) {
-              setState(() {
-                print(_value);
-                if (_value == index){
-                  
-                }
-                _value = isSelected ? index : null;
-                print(_value);
-                print("Index: $index");
-                print(isSelected);
-                
-              });
-            },
-          ));
-  }*/
           
   Widget beginningChoiceChips() {
     return Expanded(
@@ -409,61 +623,32 @@ class _CreateDecksScreenState extends State<CreateDecksScreen>{
   Widget checkmarkButton() {
     return Container(
       margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("checkmark"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          selectedBeginningSet = beginningSetsList[_defaultBeginningChoiceIndex];
-          selectedMiddleSet = middleSetsList[_defaultMiddleChoiceIndex];
-          selectedEndSet = endSetsList[_defaultEndChoiceIndex];
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SaveScreen()),
-            );
+      child: IconButton(
+          icon: Icon(Icons.check),
+          tooltip: '',
+          onPressed: () {
+            setState(() {
+              selectedBeginningSet = beginningSetsList[_defaultBeginningChoiceIndex];
+              selectedMiddleSet = middleSetsList[_defaultMiddleChoiceIndex];
+              selectedEndSet = endSetsList[_defaultEndChoiceIndex];
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SaveScreen()),
+              );
+            });
           },
-      ),
+        ),
     );
   }
-  Widget column1(){
+  Widget choiceChipRow(){
     return Container(
-    child: Column(
+    child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-        ],
-    )
-   );
-  }
-  Widget column2(){
-    return Column(
-      /*children: List<Widget>.generate(
-        3,
-        (int index) {
-          return ChoiceChip(
-            label: Text('Item $index'),
-            selected: _value == index,
-            onSelected: (bool selected) {
-              setState(() {
-                _value = selected ? index : null;
-              });
-            },
-          );
-        },
-      ).toList(),
-    */);
-    
-  }
-  Widget column3(){
-    return Container(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text("Column3"),
-          Text("Column3"),
-          Text("Column3"),
-          Text("Column3"),
+          beginningChoiceChips(),
+          middleChoiceChips(),
+          endChoiceChips(),
+          checkmarkButton(),
         ],
     )
    );
@@ -486,47 +671,51 @@ class _MyDecksScreenState extends State<MyDecksScreen> {
     final double itemWidth = size.width / 2;
 
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        //title: Text(widget.title),
-      ),
-      body: GridView.count(
-          // Create a grid with 2 columns. If you change the scrollDirection to
-          // horizontal, this produces 2 rows.
-          crossAxisCount: 3,
-          childAspectRatio: (itemWidth / itemHeight),
-          // Generate 100 widgets that display their index in the List.
-          children: List.generate(allPacks.length, (index) {
-            return Container(
-              margin: EdgeInsets.all(20),
-              child: FlatButton(
-                child: Text(allPacks[index].name),
-                color: Colors.blue,
-                textColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                onPressed: (){
-                  letterPackName = allPacks[index].name;
-                  Navigator.push(
+      body: Stack(
+          children: [
+            GridView.count(
+              // Create a grid with 2 columns. If you change the scrollDirection to
+              // horizontal, this produces 2 rows.
+              crossAxisCount: 3,
+              childAspectRatio: (itemWidth / itemHeight),
+              // Generate 100 widgets that display their index in the List.
+              children: List.generate(allPacks.length, (index) {
+                return Container(
+                  margin: EdgeInsets.all(20),
+                  child: FlatButton(
+                    child: Text(allPacks[index].name),
+                    color: Colors.blue,
+                    textColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                    onPressed: (){
+                      letterPackName = allPacks[index].name;
+                      Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => BoardScreen()),
+                      );
+                    },
+                  ),
+                );
+              }),
+            ),
+            Positioned(
+              bottom: 20,
+              left: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MyApp()),
                   );
                 },
+                child: Icon(Icons.home),
+                backgroundColor: Colors.blueAccent,
+                mini: true,
               ),
-            );
-          }),
-        ),/*Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            buttonRow(),
-          
+            )    
           ],
-        ),
-      ),*/
+        )
 
     );
   }
@@ -608,6 +797,34 @@ class SaveScreen extends StatefulWidget {
 
 class _SaveScreenState extends State<SaveScreen> {
   final _controller = TextEditingController();
+  
+  _saveInt(int numValue) async {
+        final prefs = await SharedPreferences.getInstance();
+        final key = "numberOfKeys";
+        final value = numValue;
+        prefs.setInt(key, value);
+        //print('saved $value');
+  }
+  _saveLetterPack(List<String> stringList, String keyName) async {
+        LetterPack.encodeAll();
+        final prefs = await SharedPreferences.getInstance();
+        final key = keyName;
+        final value = stringList;
+        prefs.setStringList(key, value);
+        //print('saved $value');
+  }
+  _saveAll() async {
+        numberOfLetterPacks++;
+        LetterPack.encodeAll();
+        print("encode all success!");
+        await _saveInt(numberOfLetterPacks);
+        print("saveInt success!");
+        for(int i=0; i<numberOfLetterPacks; i++){
+          await _saveLetterPack(allData[i], i.toString());
+        }
+        print('Saved All');
+        print(numberOfLetterPacks);
+  }
   @override
   void initState(){
     super.initState();
@@ -620,20 +837,20 @@ class _SaveScreenState extends State<SaveScreen> {
     _controller.dispose();
     super.dispose();
   }
+
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-      ),
       body: Center(
        
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          //mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             saveButton(),
             TextFormField(
               controller: _controller,
               decoration: InputDecoration(border: OutlineInputBorder()),
             ),
+            
           ],
         ),
       ),
@@ -654,7 +871,9 @@ class _SaveScreenState extends State<SaveScreen> {
           setState(() {
             allPacks.add(new LetterPack(_controller.text, selectedBeginningSet, selectedMiddleSet, selectedEndSet));
             letterPackName = _controller.text;
+            //put new letterPack into letterPackMap
             letterPackMap[allPacks.last.name] = allPacks.last;
+            _saveAll();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => BoardScreen()),
@@ -675,15 +894,23 @@ class _BoardScreenState extends State<BoardScreen> {
   int counter1 = 0;
   int counter2 = 0;
   int counter3 = 0;
-  //List<String> alphabet = ["a","b","c","d","e","f","g","h","i","j","k"];
   String beginningCardName = letterPackMap[letterPackName].beginning.letters[0];
   String middleCardName = letterPackMap[letterPackName].middle.letters[0];
   String endCardName = letterPackMap[letterPackName].end.letters[0];
   
+  _saveLetterPackName(String stringValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = "currentLetterPackName";
+    final value = stringValue;
+    prefs.setString(key, value);
+    //print('saved $value');
+  }
 
   @override
   void initState(){
     super.initState();
+    //save current letter pack name
+    _saveLetterPackName(letterPackName);
     SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeRight,
         DeviceOrientation.landscapeLeft,
@@ -691,23 +918,29 @@ class _BoardScreenState extends State<BoardScreen> {
   }
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        //title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            
-            buttonRow(),
-          ],
-        ),
-      ),
-
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: cardButtonRow(),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()),
+                );
+              },
+              child: Icon(Icons.home),
+              backgroundColor: Colors.blueAccent,
+              mini: true,
+            ),
+          ) 
+        ],
+      )
     );
   }
   
@@ -777,7 +1010,7 @@ class _BoardScreenState extends State<BoardScreen> {
       ),
     );
   }
-  Widget buttonRow(){
+  Widget cardButtonRow(){
     return Container(
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
