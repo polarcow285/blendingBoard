@@ -1,11 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui';
+import 'package:flutter/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_sfsymbols/flutter_sfsymbols.dart';
+
+class SizeConfig {
+  static MediaQueryData _mediaQueryData;
+  static double screenWidth;
+  static double screenHeight;
+  static double blockSizeHorizontal;
+  static double blockSizeVertical;
+
+  static double _safeAreaHorizontal;
+  static double _safeAreaVertical;
+  static double safeBlockHorizontal;
+	static double safeBlockVertical;
+
+  void init(BuildContext context) {
+  _mediaQueryData = MediaQuery.of(context);
+  screenWidth = _mediaQueryData.size.width;
+  screenHeight = _mediaQueryData.size.height;
+  blockSizeHorizontal = screenWidth / 100;
+  blockSizeVertical = screenHeight / 100;
+
+  _safeAreaHorizontal = _mediaQueryData.padding.left + _mediaQueryData.padding.right;
+	_safeAreaVertical = _mediaQueryData.padding.top + _mediaQueryData.padding.bottom;
+  safeBlockHorizontal = (screenWidth -_safeAreaHorizontal) / 100;
+	safeBlockVertical = (screenHeight -_safeAreaVertical) / 100;
+ }
+}
+class FadeRoute extends PageRouteBuilder {
+  final Widget page;
+  FadeRoute({this.page})
+      : super(
+          pageBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) =>
+              page,
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) =>
+              FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+        );
+}
+class SlideLeftRoute extends PageRouteBuilder {
+  final Widget page;
+  SlideLeftRoute({this.page})
+      : super(
+          pageBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) =>
+              page,
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) =>
+              SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+        );
+}
+class SlideRightRoute extends PageRouteBuilder {
+  final Widget page;
+  SlideRightRoute({this.page})
+      : super(
+          pageBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) =>
+              page,
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) =>
+              SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(-1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+        );
+}
+class SlideUpRoute extends PageRouteBuilder {
+  final Widget page;
+  SlideUpRoute({this.page})
+      : super(
+          pageBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) =>
+              page,
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) =>
+              SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+        );
+}
+class ScaleRoute extends PageRouteBuilder {
+  final Widget page;
+  ScaleRoute({this.page})
+      : super(
+          pageBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) =>
+              page,
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) =>
+              ScaleTransition(
+                scale: Tween<double>(
+                  begin: -1.0,
+                  end: 1.0,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.fastOutSlowIn,
+                  ),
+                ),
+                child: child,
+              ),
+        );
+}
 
 List<String> dataStringList = [];
 List <List> allData = [];
 int numberOfLetterPacks;
-
+LetterPack discardPack;
 class LetterSet{
   String name;
   List <String> position;
@@ -104,6 +261,7 @@ class LetterPack{
     int count = 0;
     
     for(int i =0; i<letterSetList.length; i++){
+      //if the first character of the string is a #, then the string is the name of a letter set
        if(letterSetList[i][0] == "#"){
          count++;
          if(count == 1){
@@ -147,8 +305,8 @@ class LetterPack{
   }
   
 }
-LetterSet singleConsonantsBeginning = new LetterSet("Single Consonants", ["beginning"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "qu", "r", "s", "t", "v", "w", "x", "y", "z"]);  
-LetterSet singleConsonantsEnding = new LetterSet("Single Consonants",["end"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "y", "z"]);
+LetterSet singleConsonantsBeginning = LetterSet("Single Consonants", ["beginning"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "qu", "r", "s", "t", "v", "w", "x", "y", "z"]);  
+LetterSet singleConsonantsEnding = LetterSet("Single Consonants",["end"], ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "y", "z"]);
 LetterSet hBrothers = LetterSet("H Brothers", ["sides"], ["ch", "ph", "sh", "th", "wh"]);
 LetterSet beginningBlends = LetterSet("Beginning Blends", ["beginning"], ["bl", "br", "cl", "cr", "dr", "fl", "fr", "gl", "gr", "pl", "pr", "sc", "scr", "shr", "sk", "sl", "sm", "sn", "sp", "spl", "spr", "squ", "st", "str", "sw", "thr", "tr", "tw"]);
 LetterSet shortVowelPointers = LetterSet("Short Vowel Pointers", ["latterHalf"], ["ck", "dge", "tch", "ff", "ll", "ss", "zz"]);
@@ -163,10 +321,9 @@ LetterSet vowelTeamBasic = LetterSet("Vowel Team Basic", ["middle"], ["ai", "ay"
 LetterSet vowelTeamIntermediate = LetterSet("Vowel Team Intermediate", ["middle"], ["aw", "eigh", "ew", "ey", "ie", "oe", "oi", "oo", "ou", "ow"]);
 LetterSet vowelTeamAdvanced = LetterSet("Vowel Team Advanced", ["middle"], ["aw", "eigh", "ew", "ey", "ie", "oe", "oi", "oo", "ou", "ow"]);
 LetterSet vowelA = LetterSet("Vowel A", ["middle"], ["al", "all", "wa", "al", "all", "wa"]);
-LetterSet empty = LetterSet("Empty", ["all"], ["", "", "", ""]);
+LetterSet empty = LetterSet("Empty", ["all"], [" ", " ", " ", " "]);
   
 List<LetterSet> allSets = [singleConsonantsBeginning, singleConsonantsEnding,  hBrothers, beginningBlends, endingBlends, magicEEnding, closedSyllable, openSyllable, magicEMiddle, shortVowelPointers,  controlledR, shortVowelExceptions, vowelTeamBasic, vowelTeamIntermediate, vowelTeamAdvanced, vowelA, empty];
-//var letterSetMap = {singleConsonantsBeginning.name: singleConsonantsBeginning, singleConsonantsEnding.name: singleConsonantsEnding, hBrothers.name:hBrothers, beginningBlends.name: beginningBlends, shortVowelPointers.name: shortVowelPointers, endingBlends.name: endingBlends, magicEEnding.name: magicEEnding, closedSyllable.name: closedSyllable, openSyllable.name: openSyllable, magicEMiddle.name: magicEMiddle, controlledR.name: controlledR, shortVowelExceptions.name: shortVowelExceptions, vowelTeamBasic.name: vowelTeamBasic, vowelTeamIntermediate.name: vowelTeamIntermediate, vowelTeamAdvanced.name: vowelTeamAdvanced,vowelA.name: vowelA, empty.name: empty};
 
 LetterPack standardClosed = LetterPack("Standard (Closed Syllable)", singleConsonantsBeginning, closedSyllable, singleConsonantsEnding);
 LetterPack standardOpen = LetterPack("Standard (Open Syllable)", singleConsonantsBeginning, openSyllable, singleConsonantsEnding);
@@ -181,9 +338,20 @@ String letterPackName = "";
 LetterSet selectedBeginningSet;
 LetterSet selectedMiddleSet;
 LetterSet selectedEndSet;
-
-
-void main() => runApp(MyApp());
+bool firstBuild = true;
+bool isLargeScreen;
+/*_reset() async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    await preferences.clear(); 
+    // allPacks.clear();  
+    print("CLEARED ALL");
+}*/
+void main(){
+    WidgetsFlutterBinding.ensureInitialized(); 
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]).then((_){
+    runApp(MyApp());
+  });
+} 
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -193,18 +361,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Blending Board',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
+        fontFamily: 'SF-Pro-Rounded',
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: 'Blending Board'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -235,16 +396,27 @@ class _MyHomePageState extends State<MyHomePage> {
         DeviceOrientation.landscapeRight,
         DeviceOrientation.landscapeLeft,
     ]);
-    readAll();
+    
+    if (firstBuild == true){
+      readAll();
+      firstBuild = false;
+    }  
+
   }
 
-  Future<List> _read(String keyNumberString, List<String> listAddress) async {
-    //allPacks.add(LetterPack("askdhf", LetterSet("hi",  ["beginning"], ["hi"]), LetterSet("x", ["middle"], ["X"]), LetterSet("yz", ["beginning"], ["YZ"])));
+  Future<List> _read(String keyNumberString) async {
     final prefs = await SharedPreferences.getInstance();
     final key = keyNumberString;
     final value = prefs.getStringList(key) ?? [];
-    listAddress = value;
     //print('read: $value');
+    return value;
+  }
+
+  Future<List> _readDiscardPack(String discardKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = discardKey;
+    final value = prefs.getStringList(key);
+    //print(value);
     return value;
   }
 
@@ -264,45 +436,97 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() { 
             numberOfLetterPacks = 3;
           });        
-          print("First time. Default packs will be set");
+          //print("First time. Default packs will be set");
         }
         else{
           numberOfLetterPacks = numberOfLetterPacks;
           allPacks.clear();
           
           for(int i = 0; i<numberOfLetterPacks; i++){
-            List<String> tempStringList;
-            await _read("$i",tempStringList).then((value) {
+            await _read("$i").then((value) {
+              //print(value);
               LetterPack tempPack = LetterPack.decodeLetterPack(value);
+              
               allPacks.add(tempPack);
+              //adding pack to letterPackMap
               letterPackMap[value[0]] = tempPack;
+              
             });
             
           }
           print("Read and decoded all packs");
         }
         print(numberOfLetterPacks);
-        /*for (LetterPack p in allPacks){
-          p.letterPackInfo();
-        }*/
       }
-      Future <String>_readLetterPackName(String key) async {
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            //Return int
-            String stringValue = prefs.getString(key);
-            return stringValue;
+  Future <String>_readLetterPackName(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String stringValue = prefs.getString(key);
+    return stringValue;
+  }
+
+  Future <void> readAtLogoButton() async{
+    await _readLetterPackName("currentLetterPackName").then((value) {
+      if (value == null){
+        print("First time, letterPackName = null");
+        value = "Standard (Closed Syllable)";
       }
+      letterPackName = value;
+      print(letterPackName);
+    });
+    if (letterPackName == "discardPack"){
+        print("Last pack was a discard Pack, need to load discardPack");
+        await _readDiscardPack("discardPackKey").then((value) {
+            discardPack = LetterPack.decodeLetterPack(value);
+            //adding pack to letterPackMap
+            letterPackMap["discardPack"] = discardPack;
+      
+              
+        });
+      }
+     
+  }
   
   _reset() async{
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      await preferences.clear(); 
-     // allPacks.clear();  
-        print("CLEARED ALL");
-     }
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    await preferences.clear(); 
+    // allPacks.clear();  
+    print("CLEARED ALL");
+  }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    SizeConfig().init(context);
+    if (MediaQuery.of(context).size.height > 600) {
+      isLargeScreen = true;
+    } 
+    else {
+      isLargeScreen = false;
+    }
+    return MaterialApp(
+      theme: ThemeData(
+        fontFamily: 'SF-Pro-Rounded',
+      ),
+      home: Stack(children: <Widget>[
+        Container(
+          height: SizeConfig.screenHeight,
+          width: SizeConfig.screenWidth,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/water-blue-ocean.jpg"), 
+                fit: BoxFit.cover
+              )
+            ),
+            child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                  ),
+                )
+            )
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
         children: <Widget>[
           Align(
             child: miscButtonRow(),
@@ -313,122 +537,189 @@ class _MyHomePageState extends State<MyHomePage> {
             alignment: Alignment.center,
           ),
           Positioned(
-            bottom: 20,
-            left: 20,
-            child: FloatingActionButton(
-              onPressed: () {
-                _reset();
-              },
-              child: Icon(Icons.restore),
-              backgroundColor: Colors.blueAccent,
-              mini: true,
-            ),
-          )
+                bottom: 20,
+                left: 20,
+                    child: IconButton(
+                      icon: Icon(Icons.restore),
+                        color: Color(0xFF0690d4),
+                        onPressed: () {
+                          _reset();
+                        },
+                )
+              )
         ],
       )
-
+      )
+        ],
+      )
     );
   }
   Widget mainButtonRow(){
     return Container(
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          /*Flexible(
+            child: createDeckButton(),
+          ),
+         
+          logoButton(),
+         
+          Flexible(
+            child: myDecksButton(),
+          ),*/
           createDeckButton(),
           logoButton(),
-          myDecksButton(),
+          myDecksButton()
         ],
     )
    );
   }
   Widget miscButtonRow(){
     return Container(
+      margin: EdgeInsets.only(bottom: 20),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          /*ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: SizeConfig.screenWidth * 0.05,
+              maxHeight: SizeConfig.screenWidth * 0.05
+            ),
+            child: missionStatementButton(),
+          )*/
           missionStatementButton(),
-          settingsButton(),
+       
         ],
     )
    );
   }
   Widget createDeckButton() {
-    return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("Create Deck"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-            Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateDecksScreen()),
-                  );
-                  
-          },
-      ),
+    return Container( 
+      margin: EdgeInsets.only(top: 20, right: 10,),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          IconButton(
+            icon: Icon(SFSymbols.plus_square_fill),
+            color: Colors.white,
+            iconSize: (isLargeScreen == true) ? SizeConfig.screenHeight * 0.20 : SizeConfig.screenHeight * 0.35,//125,
+            onPressed: (){
+              Navigator.push(
+                context,
+                SlideRightRoute(page: CreateDecksScreen()),
+              );
+            }  
+          ),
+          Text(
+            "Create Deck",
+            style: TextStyle(
+              color: Colors.blue,
+              fontFamily: 'SF-Pro-Rounded',
+              fontWeight: FontWeight.w600,
+              fontSize: (isLargeScreen == true) ? SizeConfig.safeBlockVertical * 3 : SizeConfig.safeBlockVertical * 4,
+            ),
+          )
+        ],
+      )
     );
   }
+ 
   Widget logoButton() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("logo"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: () async{
+      margin: EdgeInsets.only(top: 20, right: 5, left: 5, bottom: 20),
+      
+      child: GestureDetector(
+        child: Image(
+          image: AssetImage('assets/blendingBoardLogo.png'),
+          height: (isLargeScreen == true) ? SizeConfig.screenHeight * 0.50 : SizeConfig.screenHeight * 0.65,
+          width: (isLargeScreen == true) ? SizeConfig.screenHeight * 0.50 : SizeConfig.screenHeight * 0.65,
+        ),
+        onTap: () async{
           //read
-          await _readLetterPackName("currentLetterPackName").then((value) {
-              if (value == null){
-                print("First time, letterPackName = null");
-                value = "Standard (Closed Syllable)";
-              }
-              letterPackName = value;
-              print(letterPackName);
-          });
+        await _readLetterPackName("currentLetterPackName").then((value) {
+          if (value == null){
+              print("First time, letterPackName = null");
+              value = "Standard (Closed Syllable)";
+            }
+            letterPackName = value;
+            print(letterPackName);
+        });
+        if (letterPackName == "discardPack"){
+          print("Last pack was a discard Pack, need to load discardPack");
+          //read the discard pack from shared preferences
+          List<String> tempStringList = [];
+          await _read("discardPackKey").then((value) {
+              discardPack = LetterPack.decodeLetterPack(value);
+              letterPackMap["discardPack"] = discardPack;
+            });
+      }
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => BoardScreen()),
+            FadeRoute(page: BoardScreen()),
           );
-          },
+        },
       ),
     );
   }
   Widget myDecksButton() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("My Decks"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MyDecksScreen()),
-            );
-                  
-          },
-      ),
+      margin: EdgeInsets.only(top: 20, left: 10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          IconButton(
+            icon: Icon(SFSymbols.square_grid_2x2_fill),
+            color: Colors.white,
+            iconSize: (isLargeScreen == true) ? SizeConfig.screenHeight * 0.20 : SizeConfig.screenHeight * 0.35,//125,
+            onPressed: (){
+              Navigator.push(
+                context,
+                SlideLeftRoute(page: MyDecksScreen())
+              );
+            },
+          ),
+          Text(
+            "My Decks",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: (isLargeScreen == true) ? SizeConfig.safeBlockVertical * 3 : SizeConfig.safeBlockVertical * 4,
+              color: Colors.lightBlue
+            ),
+          )
+        ],
+      )
     );
   }
   Widget missionStatementButton() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: IconButton(
-        icon: Icon(Icons.pie_chart),
+      margin: EdgeInsets.only(bottom: SizeConfig.safeBlockHorizontal),
+      height: SizeConfig.screenWidth * (0.05),
+      width: SizeConfig.screenWidth * (0.05),
+      decoration: BoxDecoration( 
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+    child: Container(
+      margin: EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(5)),
+        image: DecorationImage(
+          fit: BoxFit.scaleDown,
+            image: AssetImage('assets/outlineDyslexiaBrainLogo.png'),
+        ),
+      ),
+        child: FlatButton(
+          child: Text(""),
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => MissionStatementScreen()),
+            SlideUpRoute(page: MissionStatementScreen())
           );
         },
       ),
+    )
     );
   }
   Widget settingsButton() {
@@ -459,34 +750,100 @@ class MissionStatementScreen extends StatefulWidget {
   _MissionStatementScreenState createState() => _MissionStatementScreenState();
 }
 class _MissionStatementScreenState extends State<MissionStatementScreen>{
+  @override
+  void initState(){
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+    ]);
+  }
+  Future<void> _launchURL() async {
+  const url = 'http://www.dyslexicmindset.com';
+  if (await canLaunch(url)) {
+    await launch(url);
+  } else {
+    throw 'Could not launch $url';
+  }
+}
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
+        //alignment: Alignment.center,
         children: <Widget>[
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text("IMAGE"),
-            //add hyperlink
+          Container(
+              constraints: BoxConstraints.expand(),
+              decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/water-blue-ocean.jpg"),
+                fit: BoxFit.cover)
+              ),
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text("MISSION STATEMENT"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            //crossAxisAlignment: ,
+            children: <Widget>[
+              Flexible(
+                child: missionStatementImage(),
+              ),           
+              missionStatementText()
+            ],
           ),
           Positioned(
-            top: 20,
+            top: SizeConfig._safeAreaVertical + 10,
             left: 20,
-            child: FloatingActionButton(
+            child: IconButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Icon(Icons.cancel),
-              backgroundColor: Colors.blueAccent,
-              mini: true,
+              icon: Icon(Icons.cancel),
+              iconSize: SizeConfig.screenHeight * 0.05,
+              color: Colors.white
             ),
           )
         ],
       )
       
+    );
+  }
+  Widget missionStatementImage() {
+   
+    return GestureDetector(
+      onTap: () {
+        _launchURL(); 
+      },
+      child: Image(
+            image: AssetImage('assets/dyslexiaBrain.png'),
+
+            height: SizeConfig.screenWidth * 0.9,
+            width: SizeConfig.screenHeight * 0.9,
+          ),
+    );
+  }
+  Widget missionStatementText() {
+    return Container(
+      margin: EdgeInsets.all(SizeConfig._safeAreaVertical + 20),
+      child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+     
+        Text("Mission:",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: SizeConfig.safeBlockHorizontal * 2.5),
+          ),
+        
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: SizeConfig.screenHeight/2,
+            maxHeight: SizeConfig.screenWidth,
+          ),
+          child: Text("\nThis app was created to ensure access to FREE dyslexia resources as part of Nadine Gilkison's Google Innovator Project.\nSpecial thanks to Brayden Gogis for creating this app to help millions of teachers and students on a global scale.\nTap the brain for more FREE resources!",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: SizeConfig.safeBlockHorizontal * 2),
+          )
+        )
+      ],
+      )
     );
   }
 }
@@ -497,20 +854,14 @@ class CreateDecksScreen extends StatefulWidget {
 
 class _CreateDecksScreenState extends State<CreateDecksScreen>{
   int _defaultBeginningChoiceIndex = 0;
-  int _defaultMiddleChoiceIndex = 0;
+  int _defaultMiddleChoiceIndex = 1;
   int _defaultEndChoiceIndex = 0;
   List <ChoiceChip> choiceChipList = [];
   List <LetterSet> beginningSetsList = [];
   List <LetterSet> middleSetsList = [];
   List <LetterSet> endSetsList = [];
   
-  @override
-  void initState(){
-    super.initState();
-    SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeRight,
-        DeviceOrientation.landscapeLeft,
-    ]);
+  void sortChips(){
     //go through all the sets, take the ones that are beginning, and put them into a list
     for(int i = 0; i<allSets.length; i++){
      
@@ -526,95 +877,162 @@ class _CreateDecksScreenState extends State<CreateDecksScreen>{
        }
      }
     }
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+    ]);
+    sortChips();
    }
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Align(
-            alignment: Alignment.center,
-            child: choiceChipRow(),
+    return MaterialApp(
+      theme: ThemeData(
+        fontFamily: 'SF-Pro-Rounded',
+      ),
+      home: Stack (
+      children: <Widget>[
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/water-blue-ocean.jpg"), 
+                fit: BoxFit.cover
+            )
           ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MyApp()),
-                );
-              },
-              child: Icon(Icons.home),
-              backgroundColor: Colors.blueAccent,
-              mini: true,
-            ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.4),
+                ),
+              )
+            )
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            
+            children: <Widget>[
+             choiceChipRow(),
+              
+              Positioned(
+                bottom: 20,
+                left: 20,
+                child: IconButton(
+                  icon: Icon(SFSymbols.house_fill),
+                  iconSize: SizeConfig.screenHeight * 0.05,
+                  color: Color(0xFF0690d4),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyApp()),
+                    );
+                  },
+                )
+              )
+            ],
           )
-        ],
+        )   
+      ],
       )
-      
     );
   }
   
           
   Widget beginningChoiceChips() {
-    return Expanded(
+    return Flexible(
       child: ListView.builder(
         itemCount: beginningSetsList.length,
         itemBuilder: (BuildContext context, int index) {
-          return ChoiceChip(
-            label: Text(beginningSetsList[index].name),
-            selected: _defaultBeginningChoiceIndex == index,
-            selectedColor: Colors.green,
-            onSelected: (bool selected) {
-              setState(() {
-                _defaultBeginningChoiceIndex = selected ? index : null;
-              });
-            },
-            backgroundColor: Colors.blue,
-            labelStyle: TextStyle(color: Colors.white),
-          );
+          //print(beginningSetsList[index].name);
+          //print(index);
+            return Container(
+              margin: EdgeInsets.only(bottom: 10,),
+              //width: 20,
+              //key: (index == 0) ? _firstChoiceChipKey : null,
+              child: ChoiceChip(
+                label: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Text(beginningSetsList[index].name,
+                        style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.center),
+                        ),//Text(beginningSetsList[index].name),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(10),bottomRight: Radius.circular(10),topLeft: Radius.circular(10),bottomLeft: Radius.circular(10))),
+                selected: _defaultBeginningChoiceIndex == index,
+                selectedColor: Color(0xFF3478F6).withOpacity(0.3),
+                onSelected: (bool selected) {
+                  setState(() {
+                    _defaultBeginningChoiceIndex = selected ? index : index;
+                  });
+                },
+                backgroundColor: Colors.white,
+                labelStyle: TextStyle(color: Color(0xFF0342dc)),
+              )
+            );        
         },
       ),
     );
   }
   Widget middleChoiceChips() {
-    return Expanded(
+    return Flexible(
       child: ListView.builder(
         itemCount: middleSetsList.length,
         itemBuilder: (BuildContext context, int index) {
-          return ChoiceChip(
-            label: Text(middleSetsList[index].name),
+          return Container(
+            margin: EdgeInsets.only(bottom: 10,),
+            child: ChoiceChip(
+            label: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Text(middleSetsList[index].name,
+                        style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.center),
+                        ),//Text(middleSetsList[index].name),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(10),bottomRight: Radius.circular(10),topLeft: Radius.circular(10),bottomLeft: Radius.circular(10))),
             selected: _defaultMiddleChoiceIndex == index,
-            selectedColor: Colors.green,
+            selectedColor: Color(0xFF3478F6).withOpacity(0.3),
             onSelected: (bool selected) {
               setState(() {
-                _defaultMiddleChoiceIndex = selected ? index : null;
+                _defaultMiddleChoiceIndex = selected ? index : index;
               });
             },
-            backgroundColor: Colors.blue,
-            labelStyle: TextStyle(color: Colors.white),
-          );
+            backgroundColor: Colors.white,
+            labelStyle: TextStyle(color: Color(0xFF0342dc)),
+            )
+        );
+          
         },
-      ),
+      )
     );
   }
   Widget endChoiceChips() {
-    return Expanded(
+    return Flexible(
       child: ListView.builder(
         itemCount: endSetsList.length,
         itemBuilder: (BuildContext context, int index) {
-          return ChoiceChip(
-            label: Text(endSetsList[index].name),
+          
+          return Container( 
+            margin: EdgeInsets.only(bottom: 10,),
+            child: ChoiceChip(
+            label: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Text(endSetsList[index].name,
+                        style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.center),
+                        ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(10),bottomRight: Radius.circular(10),topLeft: Radius.circular(10),bottomLeft: Radius.circular(10))),
             selected: _defaultEndChoiceIndex == index,
-            selectedColor: Colors.green,
+            selectedColor: Color(0xFF3478F6).withOpacity(0.3),
             onSelected: (bool selected) {
               setState(() {
-                _defaultEndChoiceIndex = selected ? index : null;
+                _defaultEndChoiceIndex = selected ? index : index;
               });
             },
-            backgroundColor: Colors.blue,
-            labelStyle: TextStyle(color: Colors.white),
+            backgroundColor: Colors.white,
+            labelStyle: TextStyle(color: Color(0xFF0342dc)),
+            )
           );
         },
       ),
@@ -622,10 +1040,11 @@ class _CreateDecksScreenState extends State<CreateDecksScreen>{
   }
   Widget checkmarkButton() {
     return Container(
-      margin: EdgeInsets.all(20),
+      margin: EdgeInsets.only(top: 20, right: SizeConfig._safeAreaVertical + 5, left: SizeConfig._safeAreaVertical + 5, bottom: 20),
       child: IconButton(
-          icon: Icon(Icons.check),
-          tooltip: '',
+          icon: Icon(SFSymbols.checkmark_circle_fill),
+          color: Color(0xFF00cbfb),
+          iconSize: SizeConfig.screenHeight * 0.1,
           onPressed: () {
             setState(() {
               selectedBeginningSet = beginningSetsList[_defaultBeginningChoiceIndex];
@@ -633,25 +1052,92 @@ class _CreateDecksScreenState extends State<CreateDecksScreen>{
               selectedEndSet = endSetsList[_defaultEndChoiceIndex];
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SaveScreen()),
+                ScaleRoute(page: SaveScreen()),
               );
             });
           },
         ),
     );
   }
-  Widget choiceChipRow(){
+  Widget column1(){
     return Container(
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      margin: EdgeInsets.only(top: SizeConfig._safeAreaVertical + 20, right: 5,),
+      child: Column(
+      children: [
+        Container( 
+          margin: EdgeInsets.only(bottom: 10),
+          child: Text("Column 1",
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Colors.blue,
+              fontSize: SizeConfig.safeBlockHorizontal * 3,
+            )
+          ), 
+        ),
+        beginningChoiceChips(),
+      ],
+      )
+    );
+  }
+  Widget column2(){
+    return Container(
+      margin: EdgeInsets.only(top: SizeConfig._safeAreaVertical + 20, right: 5, left: 5,),
+      child: Column(
         children: [
-          beginningChoiceChips(),
+          Container(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Text("Column 2",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Colors.blue,
+                fontSize: (SizeConfig.safeBlockHorizontal * 3)
+              )
+            ),
+          ),
           middleChoiceChips(),
+        ],
+      )
+    );
+  }
+  Widget column3(){
+    return Container(
+      margin: EdgeInsets.only(top: SizeConfig._safeAreaVertical + 20, left: 5),
+      child: Column(
+        children: [
+          Container( 
+            margin: EdgeInsets.only(bottom: 10),
+            child: Text("Column 3",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Colors.blue,
+                fontSize: (SizeConfig.safeBlockHorizontal * 3),
+              )
+            ),
+          ),
           endChoiceChips(),
+        ],
+      )
+   );
+  }
+  Widget choiceChipRow(){
+    return Row(
+        children: [
+          Spacer(),
+          Expanded(
+            child: column1(),
+            flex: 2,
+          ),
+          Expanded(
+            child: column2(),
+            flex: 2,
+          ),
+          Expanded(
+            child: column3(),
+            flex: 2,
+          ),
           checkmarkButton(),
         ],
-    )
-   );
+    );
   }
   
 }
@@ -663,130 +1149,200 @@ class MyDecksScreen extends StatefulWidget {
 }
 
 class _MyDecksScreenState extends State<MyDecksScreen> {
+  @override
+
+  void initState(){
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+    ]);
+  }
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
+    //var size = MediaQuery.of(context).size;
 
     /*24 is for notification bar on Android*/
-    final double itemHeight = (size.height - kToolbarHeight - 24) / 2;
-    final double itemWidth = size.width / 2;
+    //final double itemHeight = (size.height - kToolbarHeight - 24) / 2;
 
-    return Scaffold(
-      body: Stack(
-          children: [
-            GridView.count(
-              // Create a grid with 2 columns. If you change the scrollDirection to
-              // horizontal, this produces 2 rows.
-              crossAxisCount: 3,
-              childAspectRatio: (itemWidth / itemHeight),
-              // Generate 100 widgets that display their index in the List.
-              children: List.generate(allPacks.length, (index) {
-                return Container(
-                  margin: EdgeInsets.all(20),
-                  child: FlatButton(
-                    child: Text(allPacks[index].name),
-                    color: Colors.blue,
-                    textColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                    onPressed: (){
-                      letterPackName = allPacks[index].name;
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => BoardScreen()),
-                      );
-                    },
-                  ),
-                );
-              }),
-            ),
+    final double itemWidth = SizeConfig.screenWidth;
+    final double itemHeight = itemWidth/5;
+  
+    return MaterialApp(
+      theme: ThemeData(
+        fontFamily: 'SF-Pro-Rounded',
+      ),
+      home: Stack( 
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/water-blue-ocean.jpg"), 
+                fit: BoxFit.cover
+            )
+          ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.4),
+                ),
+              )
+            )
+          ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Stack(
+              alignment: Alignment.center,
+              children: <Widget>[
+                Positioned(
+                  top: 20,
+                  child: myDecksColumn(itemWidth, itemHeight),
+                ),
             Positioned(
               bottom: 20,
               left: 20,
-              child: FloatingActionButton(
+              child: IconButton(
                 onPressed: () {
                   Navigator.push(
                     context,
+                    //FadeSlideRightRoute(page: MyApp()),
                     MaterialPageRoute(builder: (context) => MyApp()),
                   );
                 },
-                child: Icon(Icons.home),
-                backgroundColor: Colors.blueAccent,
-                mini: true,
+                icon: Icon(SFSymbols.house_fill),
+                iconSize: SizeConfig.screenHeight * 0.05,
+                color: Color(0xFF0690d4)
               ),
-            )    
+            ),   
+              ]
+            )
+          ) 
+            
           ],
-        )
-
+        
+      )
     );
   }
-    Widget standardClosedButton() {
+  Widget myDecksColumn(double width, double height){
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("Standard Closed"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          letterPackName = "Standard Closed";
-            Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BoardScreen()),
-                  );
-          },
-      ),
-    );
-  }
-  Widget standardOpenButton() {
-    return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("Standard Open"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          letterPackName = "Standard Open";
-            Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BoardScreen()),
-                  );
-          },
-      ),
-    );
-  }
-  Widget blendingDemoButton() {
-    return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("Blending Demo"),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          letterPackName = "Blending Demo";
-          Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BoardScreen()),
-          );
-        },
-      ),
-    );
-  }
-  Widget buttonRow(){
-    return Container(
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      margin: EdgeInsets.only(top: SizeConfig.safeBlockHorizontal),
+      child: Column(
         children: [
-          standardClosedButton(),
-          standardOpenButton(),
-          blendingDemoButton(),
+          Container( 
+            margin: EdgeInsets.all(10),
+            child: Text("My Decks",
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.w500,
+                fontSize: SizeConfig.safeBlockHorizontal * 2.5,
+              )
+            ),
+          ),
+          
+          gridView(width, height),
+        
+          
         ],
-    )
-   );
+      )
+    );
+  }
+  Widget gridView(double width, double height) {
+    return ConstrainedBox(
+      constraints: new BoxConstraints(
+      //minHeight: ,
+      maxHeight: SizeConfig.screenWidth,
+      maxWidth: SizeConfig.screenWidth - SizeConfig._safeAreaVertical
+    ),
+
+    child: GridView.count(
+      // Create a grid with 3 columns. If you change the scrollDirection to
+      // horizontal, this produces 3 rows.
+      crossAxisCount: 3,
+      childAspectRatio: (width / height),
+      // Generate allPacks.length amount widgets that display their index in the List.
+      children: List.generate(allPacks.length, (index) {
+        //left deck
+        if (index % 3 == 0){
+          return Container(
+            margin: EdgeInsets.only(top: 5, right: 5, left: SizeConfig._safeAreaVertical + 10, bottom: 5),
+            child: FlatButton(
+              child: FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Text(allPacks[index].name,
+                  style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center),
+              ),
+                color: Colors.white,
+                textColor: Color(0xFF0342dc),
+                shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+                onPressed: (){
+                  letterPackName = allPacks[index].name;
+                  Navigator.push(
+                    context,
+                    FadeRoute(page: BoardScreen()),
+                  );
+                },
+              ),
+            );
+          }
+                //right deck
+                else if (index-2 % 3 == 0){
+                  return Container(
+                    margin: EdgeInsets.only(top: 5, right: SizeConfig._safeAreaVertical + 10, left: 5, bottom: 5),
+                    child: FlatButton(
+                      child: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Text(allPacks[index].name,
+                        style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.center),
+                        ),
+                      color: Colors.white,
+                      textColor: Color(0xFF0342dc),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                      onPressed: (){
+                        letterPackName = allPacks[index].name;
+                        Navigator.push(
+                            context,
+                            FadeRoute(page: BoardScreen()),
+                        );
+                      },
+                    ),
+                  );
+                }
+                //middle deck
+                else{
+                  return Container(
+                    //width: width,
+                    //height: height,
+                    margin: EdgeInsets.all(5),
+                    child: FlatButton(
+                      child: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Text(allPacks[index].name,
+                        style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.center),
+                        ),
+                      color: Colors.white,
+                      textColor: Color(0xFF0342dc),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                      onPressed: (){
+                        letterPackName = allPacks[index].name;
+                        Navigator.push(
+                            context,
+                            FadeRoute(page: BoardScreen()),
+                        );
+                      },
+                    ),
+                  );
+                }
+                
+              }),
+            ),
+     
+    );
   }
 }
 
@@ -813,18 +1369,22 @@ class _SaveScreenState extends State<SaveScreen> {
         prefs.setStringList(key, value);
         //print('saved $value');
   }
+  
   _saveAll() async {
         numberOfLetterPacks++;
         LetterPack.encodeAll();
         print("encode all success!");
         await _saveInt(numberOfLetterPacks);
         print("saveInt success!");
+        //goes through allData (list of string lists), which saves each letter pack
         for(int i=0; i<numberOfLetterPacks; i++){
           await _saveLetterPack(allData[i], i.toString());
         }
         print('Saved All');
         print(numberOfLetterPacks);
   }
+  final _formKey = GlobalKey<FormState>();
+  
   @override
   void initState(){
     super.initState();
@@ -839,35 +1399,110 @@ class _SaveScreenState extends State<SaveScreen> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-       
-        child: Column(
-          //mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            saveButton(),
-            TextFormField(
-              controller: _controller,
-              decoration: InputDecoration(border: OutlineInputBorder()),
+    return MaterialApp(
+      theme: ThemeData(
+        fontFamily: 'SF-Pro-Rounded',
+      ),
+      home: Stack(
+      children: <Widget>[
+        Container(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/water-blue-ocean.jpg"), 
+                fit: BoxFit.cover
+              )
             ),
-            
-          ],
+            child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                  ),
+                )
+            )
+        ),
+        Scaffold(
+          resizeToAvoidBottomPadding: false,
+          backgroundColor: Colors.transparent,
+          body: Column(
+            children: <Widget>[
+              Container( 
+                margin: EdgeInsets.only(top: SizeConfig._safeAreaVertical + 20, bottom: 5),
+                child: Text("Save Your Deck?",
+                style: TextStyle(color: Color(0xFF1079c4), fontWeight: FontWeight.w700, fontSize: SizeConfig.safeBlockHorizontal * 4),
+                ),
+              ),
+              textSaveRow(),
+              skipSaveButton(), 
+            ],
+          )
+        )
+      ],
+      )
+    );
+  }
+  Widget textSaveRow(){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+      Spacer(),
+      textFormField(),
+      Expanded(
+          child: Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: saveButton(),
         ),
       ),
-
+        
+        
+        
+    
+      ],
     );
   }
   
+  Widget textFormField(){
+    return Container(
+      width: SizeConfig.screenWidth * 0.4,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10)
+      ),
+      child: Form(
+        key: _formKey,
+        child: TextFormField(
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          validator: (value) {
+            if (value.isEmpty) {
+              return 'Please enter some text';
+            }
+            return null;
+          },
+          textAlign: TextAlign.center,
+          controller: _controller,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: SizeConfig.screenWidth * 0.02,),
+            fillColor: Colors.white.withOpacity(0.3),
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+              borderSide: BorderSide.none
+            ),
+            hintText: 'Deck Name',
+            hintStyle: TextStyle(color: Color(0xFF373737), fontWeight: FontWeight.w500, fontSize: SizeConfig.safeBlockHorizontal * 2.5),
+        ),
+        )
+      )
+    );
+  }
   Widget saveButton() {
     return Container(
       margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text("Save"),
+      child:IconButton(
+          icon: Icon(SFSymbols.checkmark_circle_fill),
+          iconSize: SizeConfig.screenWidth * 0.05,
         color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10)),
         onPressed: (){
+          if (_formKey.currentState.validate()) {
           setState(() {
             allPacks.add(new LetterPack(_controller.text, selectedBeginningSet, selectedMiddleSet, selectedEndSet));
             letterPackName = _controller.text;
@@ -876,9 +1511,38 @@ class _SaveScreenState extends State<SaveScreen> {
             _saveAll();
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => BoardScreen()),
+              FadeRoute(page: BoardScreen()),
           );
           }); 
+          }
+        },
+      ),
+    );
+  }
+  Widget skipSaveButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: FlatButton(
+        child: Text("Skip, Don't Save Deck",
+          style: TextStyle(decoration: TextDecoration.underline, color: Color(0xFF0094c8), fontWeight: FontWeight.w500, fontSize: SizeConfig.safeBlockHorizontal * 2),
+        ),
+        color: Colors.transparent,
+        textColor: Colors.black,
+        onPressed: ()async {
+            //Load the discard pack to the blending board
+            discardPack = LetterPack("discardPack", selectedBeginningSet, selectedMiddleSet, selectedEndSet);
+            letterPackName = "discardPack";
+            letterPackMap["discardPack"] = discardPack;
+            
+            //Save the discard letter pack
+            List <String> tempEncodedStringList = [];
+            discardPack.dataEncode(tempEncodedStringList);
+            await _saveLetterPack(tempEncodedStringList, "discardPackKey");
+            print(tempEncodedStringList);
+            Navigator.push(
+              context,
+              FadeRoute(page: BoardScreen()),
+          );
         },
       ),
     );
@@ -897,127 +1561,219 @@ class _BoardScreenState extends State<BoardScreen> {
   String beginningCardName = letterPackMap[letterPackName].beginning.letters[0];
   String middleCardName = letterPackMap[letterPackName].middle.letters[0];
   String endCardName = letterPackMap[letterPackName].end.letters[0];
+  bool isVowelBeginningBool;
+  bool isVowelMiddleBool;
+  bool isVowelEndBool;
+
+  bool checkVowels(String letter, bool isVowelBoolean){
+    if(letter.toLowerCase() == 'a'||letter.toLowerCase() == 'e'||letter.toLowerCase() == 'i'||letter.toLowerCase() == 'o'||letter.toLowerCase() == 'u'){
+      isVowelBoolean = true;
+    }
+    else{
+      return false;
+    }
+    return isVowelBoolean;
+  }
   
   _saveLetterPackName(String stringValue) async {
     final prefs = await SharedPreferences.getInstance();
     final key = "currentLetterPackName";
     final value = stringValue;
     prefs.setString(key, value);
-    //print('saved $value');
   }
 
   @override
   void initState(){
     super.initState();
-    //save current letter pack name
-    _saveLetterPackName(letterPackName);
     SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeRight,
         DeviceOrientation.landscapeLeft,
     ]);
+    //save current letter pack name
+    _saveLetterPackName(letterPackName);
+    
   }
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
+          Container(
+              constraints: BoxConstraints.expand(),
+              decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/water-blue-ocean.jpg"),
+              fit: BoxFit.cover)
+              ),
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: cardBackgroundRow(),
+          ),
           Align(
             alignment: Alignment.center,
             child: cardButtonRow(),
           ),
+          
           Positioned(
             bottom: 20,
             left: 20,
-            child: FloatingActionButton(
+            child: CircleAvatar(
+              backgroundColor: Color(0xFF05334c),
+              radius: (SizeConfig.screenHeight * 0.05),
+              child: IconButton(
+              icon: Icon(SFSymbols.house_fill),
+              iconSize: SizeConfig.screenHeight * 0.05,
+              color: Color(0xFF0690d4),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MyApp()),
+                  FadeRoute(page: MyApp()),
                 );
               },
-              child: Icon(Icons.home),
-              backgroundColor: Colors.blueAccent,
-              mini: true,
-            ),
-          ) 
-        ],
+             ),
+            )
+          )
+        ]
       )
     );
   }
   
   Widget beginningCardButton() {
+    return Container( 
+      margin: EdgeInsets.only(top: 20, right: 5, left: 20, bottom: 20),
+      child: ButtonTheme(
+        minWidth: SizeConfig.screenWidth * 0.27,
+        height: SizeConfig.screenWidth * 0.27,
+        child:  FlatButton(
+          child: Text(beginningCardName,
+            style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 10, fontFamily: "DidactGothic", fontWeight: FontWeight.w400),
+          ),
+            color: checkVowels(beginningCardName, isVowelBeginningBool) ? Color(0xFFfdf0b1) : Colors.white,
+            textColor: checkVowels(beginningCardName, isVowelBeginningBool) ? Color(0xFFb46605) : Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+            onPressed: (){  
+              setState(() {
+                counter1++;
+                if(counter1 >= letterPackMap[letterPackName].beginning.letters.length){
+                  counter1 = 0;
+                }
+                beginningCardName = letterPackMap[letterPackName].beginning.letters[counter1];
+              });
+            },
+          ),
+        )
+      
+      );
+  }
+  Widget beginningCardBackground() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text(beginningCardName),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          setState(() {
-            counter1++;
-            if(counter1 >= letterPackMap[letterPackName].beginning.letters.length){
-              counter1 = 0;
-            }
-            beginningCardName = letterPackMap[letterPackName].beginning.letters[counter1];
-          });
-          
-          },
-      ),
+      width: SizeConfig.screenWidth * 0.27,
+      height: SizeConfig.screenWidth * 0.27,
+      margin: EdgeInsets.only(top: 20, right: 5, left: 20, bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10)
+      )
     );
   }
   Widget middleCardButton() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text(middleCardName),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          setState(() {
-            counter2++;
-            if(counter2 >= letterPackMap[letterPackName].middle.letters.length){
-              counter2 = 0;
-            }
-            middleCardName = letterPackMap[letterPackName].middle.letters[counter2];
-          });
-          
-          },
-      ),
+      margin: EdgeInsets.only(top: 20, right: 5, left: 5, bottom: 20),
+      child: ButtonTheme(
+        minWidth: SizeConfig.screenWidth * 0.27,
+        height: SizeConfig.screenWidth * 0.27,
+          child: FlatButton(
+            child: Text(middleCardName,
+              style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 10, fontFamily: "DidactGothic", fontWeight: FontWeight.w400),
+            ),
+            color: checkVowels(middleCardName, isVowelMiddleBool) ? Color(0xffF7CE46).withOpacity(0.4) : Colors.white,
+            textColor: checkVowels(middleCardName, isVowelMiddleBool) ? Color(0xFFb46605) : Colors.black,
+            shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+            onPressed: (){
+              setState(() {
+                counter2++;
+                if(counter2 >= letterPackMap[letterPackName].middle.letters.length){
+                  counter2 = 0;
+                }
+                middleCardName = letterPackMap[letterPackName].middle.letters[counter2];
+              });
+            },
+          ),
+        )
+    );
+  }
+  Widget middleCardBackground() {
+    return Container(
+      width: SizeConfig.screenWidth * 0.27,
+      height: SizeConfig.screenWidth * 0.27,
+      margin: EdgeInsets.only(top: 20, right: 5, left: 5, bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10)
+      )
     );
   }
   Widget endCardButton() {
     return Container(
-      margin: EdgeInsets.all(20),
-      child: FlatButton(
-        child: Text(endCardName),
-        color: Colors.blue,
-        textColor: Colors.black,
-        shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-        onPressed: (){
-          setState(() {
-            counter3++;
-            if(counter3 >= letterPackMap[letterPackName].end.letters.length){
-              counter3 = 0;
-            }
-            endCardName = letterPackMap[letterPackName].end.letters[counter3];
-          });
-          
-          },
-      ),
+      margin: EdgeInsets.only(top: 20, right: 20, left: 5, bottom: 20),
+      child: ButtonTheme(
+        minWidth: SizeConfig.screenWidth * 0.27,
+        height: SizeConfig.screenWidth * 0.27,
+        child: FlatButton(
+          child: Text(endCardName,
+            style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 10, fontFamily: "DidactGothic", fontWeight: FontWeight.w400),),
+          color: checkVowels(endCardName, isVowelEndBool) ? Color(0xffF7CE46).withOpacity(0.4) : Colors.white,
+          textColor: checkVowels(endCardName, isVowelEndBool) ? Color(0xFFb46605) : Colors.black,
+          shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+          onPressed: (){
+            setState(() {
+              counter3++;
+              if(counter3 >= letterPackMap[letterPackName].end.letters.length){
+                counter3 = 0;
+              }
+              endCardName = letterPackMap[letterPackName].end.letters[counter3];
+            });
+            
+            },
+          )
+        ),
+      );
+  }
+  Widget endCardBackground() {
+    return Container(
+      width: SizeConfig.screenWidth * 0.27,
+      height: SizeConfig.screenWidth * 0.27,
+      margin: EdgeInsets.only(top: 20, right: 20, left: 5, bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10)
+      )
     );
   }
+  
   Widget cardButtonRow(){
     return Container(
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
         children: [
           beginningCardButton(),
           middleCardButton(),
           endCardButton(),
+        ],
+    )
+   );
+  }
+  Widget cardBackgroundRow(){
+    return Container(
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          beginningCardBackground(),
+          middleCardBackground(),
+          endCardBackground(),
         ],
     )
    );
