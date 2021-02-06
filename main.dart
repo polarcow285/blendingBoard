@@ -1287,7 +1287,7 @@ class _MyDecksScreenState extends State<MyDecksScreen> {
             );
           }
                 //right deck
-                else if (index-2 % 3 == 0){
+                else if ((index-2) % 3 == 0){
                   return Container(
                     margin: EdgeInsets.only(top: 5, right: SizeConfig._safeAreaVertical + 10, left: 5, bottom: 5),
                     child: FlatButton(
