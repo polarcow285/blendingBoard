@@ -536,7 +536,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: mainButtonRow(),
             alignment: Alignment.center,
           ),
-          Positioned(
+          /*Positioned(
                 bottom: 20,
                 left: 20,
                     child: IconButton(
@@ -546,7 +546,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           _reset();
                         },
                 )
-              )
+              )*/
         ],
       )
       )
